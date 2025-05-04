@@ -24,68 +24,81 @@ def parser(criteria: str, key_word: str):
 
         if response.status_code == 200:
             data = response.json()
-            for number, book in enumerate(data['items']):
-                print('-' * 10)
-                print(f'{number + 1}: {book['volumeInfo']['title']}')
+            try:
+                for number, book in enumerate(data['items']):
+                    print('-' * 10)
+                    print(f'{number + 1}: {book['volumeInfo']['title']}')
+            except KeyError:
+                print('Keyword is not found, please try something else')
             print('-' * 10)
-            choice_book = int(input('Please choice a book from titles: '))
+            try:
+                choice_book = int(input('Please choice a book from titles: '))
+            except ValueError:
+                print('Please enter an integer from the titles')
             print('-' * 10)
-            print(f'Title: {data['items'][choice_book - 1]['volumeInfo']['title']}')
-            print(f'Authors: {', '.join(data['items'][choice_book - 1]['volumeInfo']['authors'])}')
-            print(f'Publish date: {data['items'][choice_book - 1]['volumeInfo']['publishedDate']}')
-            print('-' * 10)
-
-            save_choice = input('Do you want to save info? (yes, no) ').lower().strip()
-
-            if save_choice == 'yes':
-                book_data = {
-                    'Title': data['items'][choice_book - 1]['volumeInfo']['title'],
-                    'Authors': ', '.join(data['items'][choice_book - 1]['volumeInfo']['authors']),
-                    'Publish date': data['items'][choice_book - 1]['volumeInfo']['publishedDate']
-                }
-                while True:
-                    print('1: Json')
-                    print('2: Csv')
-                    file_choice = int(input('Choose format from given: '))
-
-                    if file_choice == 1:
-                        try:
-                            with open('saved-books.json', 'r') as file:
-                                books = json.load(file)
-                        except FileNotFoundError:
-                            books = []
-                        
-                        books.append(book_data)
-
-                        with open('saved-books.json', 'w') as file:
-                            json.dump(books, file, indent=4)
-
-                        print('Successfuly saved!')
-                        break
-                    elif file_choice == 2:
-                        try:
-                            with open('saved-books.csv', 'r') as file:
-                                content = csv.reader(file)
-                                books = list(content)
-                        except FileNotFoundError:
-                            books = []
-                        
-                        books.append([data['items'][choice_book - 1]['volumeInfo']['title'],
-                                    ', '.join(data['items'][choice_book - 1]['volumeInfo']['authors']),
-                                    data['items'][choice_book - 1]['volumeInfo']['publishedDate']])
-                        
-                        with open('saved-books.csv', 'w', newline='') as file:
-                            writer = csv.writer(file)
-                            for row in books:
-                                writer.writerow(row)
-
-                        print('Successfuly saved!')
-                        break
-                    else:
-                        print('Not right choice, choose from menu')
-                        continue
+            try:
+                print(f'Title: {data['items'][choice_book - 1]['volumeInfo']['title']}')
+                print(f'Authors: {', '.join(data['items'][choice_book - 1]['volumeInfo']['authors'])}')
+                print(f'Publish date: {data['items'][choice_book - 1]['volumeInfo']['publishedDate']}')
+            except IndexError:
+                print('Number of book out of range')
             else:
-                print('Exiting...')
+                print('-' * 10)
+
+                save_choice = input('Do you want to save info? (yes, no) ').lower().strip()
+
+                if save_choice == 'yes':
+                    book_data = {
+                        'Title': data['items'][choice_book - 1]['volumeInfo']['title'],
+                        'Authors': ', '.join(data['items'][choice_book - 1]['volumeInfo']['authors']),
+                        'Publish date': data['items'][choice_book - 1]['volumeInfo']['publishedDate']
+                    }
+                    while True:
+                        print('1: Json')
+                        print('2: Csv')
+                        try:
+                            file_choice = int(input('Choose format from given: '))
+                        except ValueError:
+                            print('Please enter an integer')
+                        else:
+                            if file_choice == 1:
+                                try:
+                                    with open('saved-books.json', 'r') as file:
+                                        books = json.load(file)
+                                except FileNotFoundError:
+                                    books = []
+                                
+                                books.append(book_data)
+
+                                with open('saved-books.json', 'w') as file:
+                                    json.dump(books, file, indent=4)
+
+                                print('Successfuly saved!')
+                                break
+                            elif file_choice == 2:
+                                try:
+                                    with open('saved-books.csv', 'r') as file:
+                                        content = csv.reader(file)
+                                        books = list(content)
+                                except FileNotFoundError:
+                                    books = []
+                                
+                                books.append([data['items'][choice_book - 1]['volumeInfo']['title'],
+                                            ', '.join(data['items'][choice_book - 1]['volumeInfo']['authors']),
+                                            data['items'][choice_book - 1]['volumeInfo']['publishedDate']])
+                                
+                                with open('saved-books.csv', 'w', newline='') as file:
+                                    writer = csv.writer(file)
+                                    for row in books:
+                                        writer.writerow(row)
+
+                                print('Successfuly saved!')
+                                break
+                            else:
+                                print('Not right choice, choose from menu')
+                                continue
+                else:
+                    print('Exiting...')
         else:
             print(f'Error: {response.status_code}')
 
@@ -103,3 +116,5 @@ elif criteria == 'publisher':
 elif criteria == 'subject':
     key_word = input('Enter a key word subject: ')
     parser('subject', key_word)
+else:
+    print('Pick right choice from the given')
